@@ -3595,8 +3595,31 @@ async function showAdTunnel() {
         // النقر على الإعلان نفسه يؤدي لصفحة المعلن
         mediaCont.onclick = (e) => {
             e.stopPropagation();
-            window.open(ad.target_url.startsWith('http') ? ad.target_url : 'https://' + ad.tar
+            window.open(ad.target_url.startsWith('http') ? ad.target_url : 'https://' + ad.target_url, '_blank');
+        };
+
+        // تشغيل العداد التنازلي لزر التخطي
+        let timeLeft = 5;
+        const timer = setInterval(() => {
+            timeLeft--;
+            if(timeLeft <= 0) {
+                clearInterval(timer);
+                timerUI.style.display = 'none';
+                skipBtn.style.display = 'block';
+            } else {
+                timerUI.innerText = timeLeft;
+            }
+        }, 1000);
+
+    } catch (err) {
+        console.error("Ad Tunnel Error:", err);
+    }
+}
+
+// تشغيل نظام الإعلانات بعد فتح التطبيق (يمكنك تعديل التوقيت)
+setTimeout(showAdTunnel, 3000);
 
 </script>
 </body>
 </html>
+
