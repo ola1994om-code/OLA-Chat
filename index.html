@@ -3589,24 +3589,64 @@ async function showAdTunnel() {
             // تحديث نص زر التخطي ليكون "التالي" للإعلان الأول، و "تخطي" للإعلان الأخير
             skipBtn.innerText = (currentAdIndex === 0 && ads.length > 1) ? 'التالي ⏭' : 'تخطي ⏭';
 
+            // معالجة نوع الإعلان
             if (ad.ad_type === 'video') {
                 const vid = document.createElement('video');
                 vid.src = ad.media_url; 
-                vid.style.cssText = 'max-width:90%; max-height:100%; object-fit:contain; border-radius:12px; box-sharget_url, '_blank');
-        };
-
-        // تشغيل العداد التنازلي لزر التخطي
-        let timeLeft = 5;
-        const timer = setInterval(() => {
-            timeLeft--;
-            if(timeLeft <= 0) {
-                clearInterval(timer);
-                timerUI.style.display = 'none';
-                skipBtn.style.display = 'block';
+                vid.style.cssText = 'max-width:90%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);';
+                vid.autoplay = true;
+                vid.muted = true; // مطلوب للتشغيل التلقائي في أغلب المتصفحات
+                vid.playsInline = true;
+                mediaCont.appendChild(vid);
+                
+                unmuteBtn.style.display = 'flex';
+                unmuteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    vid.muted = !vid.muted;
+                    unmuteBtn.innerHTML = vid.muted ? '🔇' : '🔊';
+                };
             } else {
-                timerUI.innerText = timeLeft;
+                const img = document.createElement('img');
+                img.src = ad.media_url;
+                img.style.cssText = 'max-width:90%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);';
+                mediaCont.appendChild(img);
             }
-        }, 1000);
+
+            // برمجة أزرار الزيارة والتخطي
+            visitBtn.onclick = (e) => {
+                e.stopPropagation();
+                if(ad.target_url) window.open(ad.target_url, '_blank');
+            };
+
+            skipBtn.onclick = (e) => {
+                e.stopPropagation();
+                currentAdIndex++;
+                if (currentAdIndex < ads.length) {
+                    playCurrentAd();
+                } else {
+                    document.body.removeChild(overlay);
+                }
+            };
+
+            // تشغيل العداد التنازلي لزر التخطي
+            let timeLeft = 5;
+            timerUI.innerText = timeLeft;
+            if(timerInterval) clearInterval(timerInterval);
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                if(timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerUI.style.display = 'none';
+                    skipBtn.style.display = 'block';
+                } else {
+                    timerUI.innerText = timeLeft;
+                }
+            }, 1000);
+        }
+
+        // بدء تشغيل أول إعلان
+        playCurrentAd();
 
     } catch (err) {
         console.error("Ad Tunnel Error:", err);
