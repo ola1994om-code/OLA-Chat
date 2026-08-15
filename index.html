@@ -958,7 +958,7 @@
 
 <script>
 const COIN_IMAGE_URL = "https://i.ibb.co/DPRSbf6T/1002053950.jpg"; 
-const SUPABASE_URL = "https://jazz-rapid-finance-gate.trycloudflare.com";
+const SUPABASE_URL = "http://167.86.106.111:8000";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1659,7 +1659,7 @@ async function registerNewAccount() {
         security_question: currentSecurityQuestionChat, security_answer: secA
     }]);
     
-    if (error) { out.textContent = "❌ خطأ سيرفر: " + error.message; out.style.color="var(--danger)"; console.error(error); return; }
+    if (error) { out.textContent = "❌ حدث خطأ داخلي. تأكد من تحديث قاعدة البيانات."; out.style.color="var(--danger)"; console.error(error); return; }
     
     out.textContent = "✅ تم إنشاء الحساب بنجاح! جارٍ تسجيل الدخول...";
     out.style.color = "var(--ok)";
@@ -3518,145 +3518,7 @@ function setupAdminMessagesListener() {
     }).subscribe();
 }
 
-/* =========================================================
-   نفق الإعلانات الآمن (Ad Tunnel) - نظام الإعلان المزدوج والصوت
-========================================================= */
-async function showAdTunnel() {
-    // تذكر وضع الرابط الخاص بك هنا دائماً
-    const AD_SUPABASE_URL = "https://jazz-rapid-finance-gate.trycloudflare.com"; 
-    const AD_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyAgCiAgICAicm9sZSI6ICJhbm9uIiwKICAgICJpc3MiOiAic3VwYWJhc2UtZGVtbyIsCiAgICAiaWF0IjogMTY0MTc2OTIwMCwKICAgICJleHAiOiAxNzk5NTM1NjAwCn0.dc_X5iR_VP_qT0zsiyj_I_OZ2T9FtRU2BBNWN8Bu4GE";
-    
-    try {
-        // جلب جميع الإعلانات النشطة
-        const res = await fetch(AD_SUPABASE_URL + '/rest/v1/ola_ads?active=eq.true&select=*', { 
-            headers: { 'apikey': AD_SUPABASE_KEY, 'Authorization': 'Bearer ' + AD_SUPABASE_KEY } 
-        });
-        let ads = await res.json();
-        if (!ads || ads.length === 0) return;
-
-        // خلط الإعلانات واختيار إعلانين كحد أقصى
-        ads = ads.sort(() => 0.5 - Math.random()).slice(0, 2);
-        let currentAdIndex = 0;
-        let timerInterval = null;
-
-        // إنشاء الشاشة السوداء فوق التطبيق
-        const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.95); z-index:9999999; display:flex; justify-content:center; align-items:center; flex-direction:column; backdrop-filter:blur(5px);';
-        document.body.appendChild(overlay);
-
-        // عاليسار: شارة إعلان ممول OLA
-        const badge = document.createElement('div');
-        badge.innerText = 'إعلان ممول OLA';
-        badge.style.cssText = 'position:absolute; top:20px; left:20px; background:rgba(212,175,55,0.9); color:#000; padding:6px 12px; border-radius:6px; font-family:sans-serif; font-size:12px; font-weight:bold; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.3); z-index:1000000;';
-        badge.onclick = (e) => { e.stopPropagation(); window.open('https://ola1994om-code.github.io/OLA12/', '_blank'); };
-        overlay.appendChild(badge);
-
-        // عاليمين: عداد الثواني
-        const timerUI = document.createElement('div');
-        timerUI.style.cssText = 'position:absolute; top:20px; right:20px; background:rgba(0,0,0,0.6); color:#fff; padding:8px 20px; border-radius:20px; font-family:sans-serif; font-size:16px; font-weight:bold; border:1px solid #fff; z-index:1000000;';
-        overlay.appendChild(timerUI);
-
-        // زر التخطي (أو التالي)
-        const skipBtn = document.createElement('button');
-        skipBtn.style.cssText = 'position:absolute; top:20px; right:20px; padding:8px 20px; background:var(--danger, #ef4444); color:#fff; border:1px solid rgba(255,255,255,0.3); border-radius:20px; cursor:pointer; font-family:sans-serif; font-size:14px; font-weight:bold; display:none; z-index:1000000;';
-        overlay.appendChild(skipBtn);
-
-        // من تحت: زر زيارة صفحة المعلن
-        const visitBtn = document.createElement('button');
-        visitBtn.innerText = '🌐 زيارة صفحة المعلن';
-        visitBtn.style.cssText = 'position:absolute; bottom:40px; padding:12px 25px; background:#0a2e6d; color:#ffffff; border:2px solid #d4af37; border-radius:30px; cursor:pointer; font-family:sans-serif; font-size:16px; font-weight:bold; display:block; box-shadow:0 4px 15px rgba(0,0,0,0.5); z-index:1000000;';
-        overlay.appendChild(visitBtn);
-
-        // زر التحكم بالصوت الجديد (يظهر فقط مع الفيديو)
-        const unmuteBtn = document.createElement('button');
-        unmuteBtn.innerHTML = '🔇';
-        unmuteBtn.style.cssText = 'position:absolute; bottom:40px; right:20px; background:rgba(0,0,0,0.7); color:#fff; border:1px solid rgba(255,255,255,0.3); width:50px; height:50px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; font-size:22px; z-index:1000000; box-shadow:0 4px 10px rgba(0,0,0,0.5); display:none;';
-        overlay.appendChild(unmuteBtn);
-
-        // حاوية الميديا
-        const mediaCont = document.createElement('div');
-        mediaCont.style.cssText = 'width:100%; height:75%; display:flex; justify-content:center; align-items:center; cursor:pointer;';
-        overlay.appendChild(mediaCont);
-
-        // دالة تشغيل الإعلان الحالي من القائمة
-        function playCurrentAd() {
-            const ad = ads[currentAdIndex];
-            mediaCont.innerHTML = ''; // مسح الإعلان السابق
-            skipBtn.style.display = 'none';
-            timerUI.style.display = 'block';
-            unmuteBtn.style.display = 'none';
-            
-            // تحديث نص زر التخطي ليكون "التالي" للإعلان الأول، و "تخطي" للإعلان الأخير
-            skipBtn.innerText = (currentAdIndex === 0 && ads.length > 1) ? 'التالي ⏭' : 'تخطي ⏭';
-
-            // معالجة نوع الإعلان
-            if (ad.ad_type === 'video') {
-                const vid = document.createElement('video');
-                vid.src = ad.media_url; 
-                vid.style.cssText = 'max-width:90%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);';
-                vid.autoplay = true;
-                vid.muted = true; // مطلوب للتشغيل التلقائي في أغلب المتصفحات
-                vid.playsInline = true;
-                mediaCont.appendChild(vid);
-                
-                unmuteBtn.style.display = 'flex';
-                unmuteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    vid.muted = !vid.muted;
-                    unmuteBtn.innerHTML = vid.muted ? '🔇' : '🔊';
-                };
-            } else {
-                const img = document.createElement('img');
-                img.src = ad.media_url;
-                img.style.cssText = 'max-width:90%; max-height:100%; object-fit:contain; border-radius:12px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);';
-                mediaCont.appendChild(img);
-            }
-
-            // برمجة أزرار الزيارة والتخطي
-            visitBtn.onclick = (e) => {
-                e.stopPropagation();
-                if(ad.target_url) window.open(ad.target_url, '_blank');
-            };
-
-            skipBtn.onclick = (e) => {
-                e.stopPropagation();
-                currentAdIndex++;
-                if (currentAdIndex < ads.length) {
-                    playCurrentAd();
-                } else {
-                    document.body.removeChild(overlay);
-                }
-            };
-
-            // تشغيل العداد التنازلي لزر التخطي
-            let timeLeft = 5;
-            timerUI.innerText = timeLeft;
-            if(timerInterval) clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                timeLeft--;
-                if(timeLeft <= 0) {
-                    clearInterval(timerInterval);
-                    timerUI.style.display = 'none';
-                    skipBtn.style.display = 'block';
-                } else {
-                    timerUI.innerText = timeLeft;
-                }
-            }, 1000);
-        }
-
-        // بدء تشغيل أول إعلان
-        playCurrentAd();
-
-    } catch (err) {
-        console.error("Ad Tunnel Error:", err);
-    }
-}
-
-// تشغيل نظام الإعلانات بعد فتح التطبيق (يمكنك تعديل التوقيت)
-setTimeout(showAdTunnel, 3000);
-
+window.onload = checkLogin;
 </script>
 </body>
 </html>
-
