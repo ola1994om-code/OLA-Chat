@@ -1151,7 +1151,8 @@ function copyText(txt) {
 }
 
 function money(n){ return (Number(n)||0).toLocaleString('en-US'); }
-function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
+
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, m => ({'&':'&','<':'<','>':'>','"':'"','\'':"\\'"}[m])); }
 
 let myDeviceId = localStorage.getItem("ola_device_id");
 if (!myDeviceId) {
