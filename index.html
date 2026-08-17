@@ -160,7 +160,7 @@
   .badge-mod { background: #e0e7ff; color: #3730a3; border: 1px solid #a5b4fc; }
   .badge-guest { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; }
 
-  .profile-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--brand); margin: 0 auto 15px; display: block; object-fit: cover; box-shadow: 0 0 20px rgba(212,175,55,0.4); background:#000; }
+  .profile-avatar { width: 100px; height: 100px; border-radius: 50%; border: 3px solid var(--brand); margin: 0 auto 15px; display: block; object-fit: cover; box-shadow: 0 0 20px rgba(212,175,55,0.4); background:transparent; }
   
   .fullpage { position:fixed; inset:0; background:#f9fafb; color:#111827; display:none; flex-direction:column; z-index: 3000; overflow-y:auto; }
   .page-header { display:flex; align-items:center; gap:10px; padding:15px; border-bottom:1px solid #e5e7eb; background:#ffffff; }
@@ -961,7 +961,8 @@
 // التقاط أي صورة معطوبة في كامل التطبيق واستبدالها بشفافية للحفاظ على التصميم
 window.addEventListener('error', function(e) {
     if (e.target.tagName && e.target.tagName.toLowerCase() === 'img') {
-        e.target.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+        // إخفاء الصورة بالكامل إذا كانت مكسورة حتى لا تترك دائرة فارغة
+        e.target.style.display = 'none';
     }
 }, true);
 
